@@ -1,6 +1,6 @@
 module github.com/Ic1k/MenuShka/api-gateway
 
-go 1.23
+go 1.23.2
 
 require (
 	github.com/go-chi/chi/v5 v5.1.0

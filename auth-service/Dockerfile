@@ -14,7 +14,7 @@ RUN go mod download
 COPY . .
 
 # Сборка бинарного файла
-RUN go build -o fridge-service main.go
+RUN go build -o auth-service main.go
 
 # Минимальный финальный образ
 FROM alpine:3.18
@@ -26,7 +26,7 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 WORKDIR /app
 
 # Копируем бинарный файл из стадии сборки
-COPY --from=builder /app/fridge-service /app/fridge-service
+COPY --from=builder /app/auth-service /app/auth-service
 
 # Меняем права для пользователя
 USER appuser
@@ -35,4 +35,4 @@ USER appuser
 EXPOSE 8081
 
 # Команда запуска
-CMD ["./fridge-service"]
+CMD ["./auth-service"]

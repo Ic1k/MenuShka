@@ -1,4 +1,5 @@
-version: '3'
+version: '3.8'
+
 services:
   api-gateway:
     build: ./api-gateway
@@ -8,6 +9,10 @@ services:
       - menu-service
       - recipe-service
       - fridge-service
+      - auth-service
+    restart: unless-stopped
+    networks:
+      - backend
 
   menu-service:
     build: ./menu-service
@@ -17,11 +22,14 @@ services:
       - PORT=8081
       - DB_HOST=db
       - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
-      - DB_NAME=menu_service_db
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${MENU_DB_NAME}
     depends_on:
       - db
+    restart: unless-stopped
+    networks:
+      - backend
 
   recipe-service:
     build: ./recipe-service
@@ -31,11 +39,14 @@ services:
       - PORT=8082
       - DB_HOST=db
       - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
-      - DB_NAME=recipe_service_db
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${RECIPE_DB_NAME}
     depends_on:
       - db
+    restart: unless-stopped
+    networks:
+      - backend
 
   fridge-service:
     build: ./fridge-service
@@ -45,21 +56,42 @@ services:
       - PORT=8083
       - DB_HOST=db
       - DB_PORT=5432
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
-      - DB_NAME=fridge_service_db
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${FRIDGE_DB_NAME}
     depends_on:
       - db
+    restart: unless-stopped
+    networks:
+      - backend
+
+  auth-service:
+    build: ./auth-service
+    ports:
+      - "8084:8084"
+    environment:
+      - PORT=8084
+    restart: unless-stopped
+    networks:
+      - backend
+
+
 
   db:
-    image: postgres:13
+    image: postgres:17
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - backend
 
 volumes:
   db-data:
+
+networks:
+  backend:

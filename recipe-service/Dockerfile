@@ -1,17 +1,38 @@
 # syntax=docker/dockerfile:1
 
-FROM golang:1.17-alpine
+# Мультистадия сборки: стадия сборки
+FROM golang:1.23.2-alpine AS builder
 
+# Установка рабочей директории
 WORKDIR /app
 
-COPY go.mod ./
-COPY go.sum ./
+# Копируем go.mod и go.sum отдельно для кэширования зависимостей
+COPY go.mod go.sum ./
 RUN go mod download
 
-COPY . ./
+# Копируем оставшиеся файлы проекта
+COPY . .
 
+# Сборка бинарного файла
 RUN go build -o recipe-service main.go
 
-EXPOSE 8082
+# Минимальный финальный образ
+FROM alpine:3.18
 
+# Создаем непривилегированного пользователя для безопасности
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Установка рабочей директории
+WORKDIR /app
+
+# Копируем бинарный файл из стадии сборки
+COPY --from=builder /app/recipe-service /app/recipe-service
+
+# Меняем права для пользователя
+USER appuser
+
+# Экспорт порта
+EXPOSE 8081
+
+# Команда запуска
 CMD ["./recipe-service"]

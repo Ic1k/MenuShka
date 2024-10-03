@@ -1,23 +1,38 @@
-# Используем официальный образ Go
-FROM golang:1.20-alpine
+# syntax=docker/dockerfile:1
 
-# Устанавливаем рабочую директорию
+# Мультистадия сборки: стадия сборки
+FROM golang:1.23.2-alpine AS builder
+
+# Установка рабочей директории
 WORKDIR /app
 
-# Копируем файл go.mod и go.sum
+# Копируем go.mod и go.sum отдельно для кэширования зависимостей
 COPY go.mod go.sum ./
-
-# Загружаем зависимости
 RUN go mod download
 
-# Копируем все остальные файлы
-COPY . ./
+# Копируем оставшиеся файлы проекта
+COPY . .
 
-# Собираем бинарник
+# Сборка бинарного файла
 RUN go build -o api-gateway main.go
 
-# Указываем порт, который будет использоваться
-EXPOSE 8080
+# Минимальный финальный образ
+FROM alpine:3.18
 
-# Команда для запуска
+# Создаем непривилегированного пользователя для безопасности
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+
+# Установка рабочей директории
+WORKDIR /app
+
+# Копируем бинарный файл из стадии сборки
+COPY --from=builder /app/api-gateway /app/api-gateway
+
+# Меняем права для пользователя
+USER appuser
+
+# Экспорт порта
+EXPOSE 8081
+
+# Команда запуска
 CMD ["./api-gateway"]

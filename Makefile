@@ -2,7 +2,7 @@
 
 .PHONY: all build run clean tidy
 
-SERVICES = api-gateway menu-service recipe-service fridge-service
+SERVICES = api-gateway menu-service recipe-service fridge-service auth-service
 
 all: build
 
